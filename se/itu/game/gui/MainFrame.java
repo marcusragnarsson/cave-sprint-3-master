@@ -51,10 +51,10 @@ public class MainFrame {
     protected DefaultListCellRenderer defaultLCR = new DefaultListCellRenderer();
 
     public Component getListCellRendererComponent(JList<? extends Thing> list,
-                                                  Thing thing,
-                                                  int index,
-                                                  boolean isSelected,
-                                                  boolean cellHasFocus) {
+    Thing thing,
+    int index,
+    boolean isSelected,
+    boolean cellHasFocus) {
       defaultLCR.setText(thing.toString());
       if (isSelected) {
         defaultLCR.setBackground(list.getSelectionBackground());
@@ -86,8 +86,8 @@ public class MainFrame {
     eastButton  = new JButton("EAST");
     westButton  = new JButton("WEST");
     /* A map with directions as keys and the nav buttons as values
-     * used for looping through the buttons and enable/disable them
-     */
+    * used for looping through the buttons and enable/disable them
+    */
     buttonMap = new HashMap<>();
     buttonMap.put(Direction.NORTH, northButton);
     buttonMap.put(Direction.SOUTH, southButton);
@@ -114,30 +114,29 @@ public class MainFrame {
     roomThings = new JList<>(roomThingsModel);
     roomThings.setCellRenderer(renderer);
     roomThings.setPrototypeCellValue(new Thing("Pirate ChestXXXXXXXX"));
-    //addFakeRules();
   }
 
   private void addFakeRules() {
     RuleBook
-      .addThingRule(Things
-                    .get("Bird"),
-                    ()->
-                    {
-                      if(player
-                         .getInstance()
-                         .inventory()
-                         .contains(Things.get("Rod"))) {
-                        throw new RuleViolationException("The bird gets scared and you can't take it");
-                      }
-                      if(!player
-                         .getInstance()
-                         .inventory()
-                         .contains(Things.get("Cage"))) {
-                        throw new RuleViolationException("You cannot take the bird right now");
-                      } else {
-                        return true;
-                      }
-                    });
+    .addThingRule(Things
+    .get("Bird"),
+    ()->
+    {
+      if(player
+      .getInstance()
+      .inventory()
+      .contains(Things.get("Rod"))) {
+        throw new RuleViolationException("The bird gets scared and you can't take it");
+      }
+      if(!player
+      .getInstance()
+      .inventory()
+      .contains(Things.get("Cage"))) {
+        throw new RuleViolationException("You cannot take the bird right now");
+      } else {
+        return true;
+      }
+    });
   }
 
   private void updateButtons() {
@@ -201,14 +200,14 @@ public class MainFrame {
     Room currentRoom = player.currentRoom();
     for (Direction dir : Direction.values()) {
       buttonMap.get(dir).addActionListener( (event) -> {
-          try {
-            player.go(dir);
-            debug(dir + " button pressed");
-            updateGui();
-          } catch (IllegalMoveException e) {
-            messages.setText("Bad direction - shouldn't happen.");
-          }
-        });
+        try {
+          player.go(dir);
+          debug(dir + " button pressed");
+          updateGui();
+        } catch (IllegalMoveException e) {
+          messages.setText("Bad direction - shouldn't happen.");
+        }
+      });
     }
     RoomThingsListener roomThingsListener = new RoomThingsListener();
     InventoryListener inventoryListener   = new InventoryListener();
@@ -217,23 +216,14 @@ public class MainFrame {
   }
 
   /* Run this method from main() when you want
-   * to setup and show this window.
-   */
+  * to setup and show this window.
+  */
   public void run() {
     initComponents();
     layoutComponents();
     addListeners();
     mainFrame.pack();
     mainFrame.setVisible(true);
-  }
-
-  static {
-    try {
-      // Ignore this - it's a fix for Rikard's computer. Hell Dell!
-      UIManager.setLookAndFeel((LookAndFeel)Class
-                               .forName("com.sun.java.swing.plaf.gtk.GTKLookAndFeel")
-                               .newInstance());
-    } catch (Exception ignore) {}
   }
 
   private class RoomThingsListener extends MouseAdapter {
@@ -260,9 +250,8 @@ public class MainFrame {
       if (event.getClickCount() == 2) {
         Thing thing = ((JList<Thing>)event.getSource()).getSelectedValue();
         debug("Click on the inventory's " + thing);
-        // Make the player drop the thing!
+        // Make the player drop the thing and update gui.
         Player.getInstance().dropThing(thing);
-        // TODO: Change the below to updateGui() instead.
         updateGui();
       }
     }

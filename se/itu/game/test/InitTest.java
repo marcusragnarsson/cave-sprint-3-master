@@ -10,7 +10,7 @@ import se.itu.game.cave.init.Things;
 
 import static se.itu.game.test.TestUtils.START_ROOM_DESCR;
 import static se.itu.game.test.TestUtils.EAST_ROOM_DESCR;
-import static se.itu.game.test.TestUtils.WEST_ROOM_DESCR; 
+import static se.itu.game.test.TestUtils.WEST_ROOM_DESCR;
 import static se.itu.game.test.TestUtils.NORTH_ROOM_DESCR;
 import static se.itu.game.test.TestUtils.SOUTH_4_ROOM_DESCR;
 
@@ -24,7 +24,7 @@ public class InitTest {
   static {
     CaveInitializer.getInstance().initAll();
   }
-  
+
   private static Player player;
   private static final Thing skeletonKey = Things.get("Skeleton Key");
   private static final Thing cage = Things.get("Cage");
@@ -49,7 +49,7 @@ public class InitTest {
       ; // Expected!
     }
   }
-  
+
   public void testI1() {
     /*
       Go east, verify room desc
@@ -90,7 +90,7 @@ public class InitTest {
     } catch (IllegalMoveException e) {
       System.err.println("Couldn't go! " + e.getMessage());
     }
-      
+
     assert player.currentRoom().description().startsWith(SOUTH_4_ROOM_DESCR)
       : "South x 4 from first room failed. Player's room: "
       + player.currentRoom();
@@ -114,7 +114,7 @@ public class InitTest {
       : "Room still has cage after player picking it up."
       + " Player's room: " + player.currentRoom();
   }
-  
+
   public static void main(String[] args) {
     System.out.println("==Running test for the CaveInitializer class==");
     System.out.println("Running I1 (move around, pick up key):");
@@ -125,5 +125,5 @@ public class InitTest {
     test.testI2();
     System.out.println("I2 passed, illegal argument caught.");
   }
-  
+
 }

@@ -54,9 +54,7 @@ public abstract class RoomRule {
    * @return The creatureDescription of this RoomRule, e.g. "A Dragon stands in the Room"
    */
   public String creatureDescription() {
-    /* Call apply() and return the creatureDescription
-     * here...
-     */
+
      apply();
     return creatureDescription;
   }
