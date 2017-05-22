@@ -88,6 +88,7 @@ public class Player /* does not extend People */ {
       throw new IllegalMoveException("No Room to the " + direction);
     }
     currentRoom = newRoom;
+
   }
 
   /**

@@ -6,7 +6,9 @@ import se.itu.game.cave.RoomRule;
 import se.itu.game.cave.RuleBook;
 import se.itu.game.cave.RuleViolationException;
 import se.itu.game.cave.Thing;
+import se.itu.game.cave.Music;
 
+import javax.swing.JOptionPane;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -16,31 +18,32 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Initializes the cave of rooms from the database. This class
-   also contains some convenience methods for looking up rooms by ID.
- */
+* Initializes the cave of rooms from the database. This class
+also contains some convenience methods for looking up rooms by ID.
+*/
 public class CaveInitializer {
 
   private static final String EVERYTHING_QUERY =
-    "SELECT cave.roomid, north, south, east, west, line, linenr, thing " +
-    "FROM cave LEFT JOIN lines " +
-    "ON cave.roomid=lines.roomid "+
-    "LEFT JOIN things ON cave.roomid=things.roomid;";
+  "SELECT cave.roomid, north, south, east, west, line, linenr, thing " +
+  "FROM cave LEFT JOIN lines " +
+  "ON cave.roomid=lines.roomid "+
+  "LEFT JOIN things ON cave.roomid=things.roomid;";
   private DbUtil database = DbUtil.getInstance();
   private Map<Integer, Room> cave;
   private static CaveInitializer instance;
 
+
   /**
-   * Returns a reference to the only instance of this class.
-   * @return A reference to the only instance of this class.
-   */
+  * Returns a reference to the only instance of this class.
+  * @return A reference to the only instance of this class.
+  */
   public static CaveInitializer getInstance() {
     if (instance == null) {
       instance = new CaveInitializer();
     }
     return instance;
   }
-  
+
   private static class DbRoom{
     private int id;
     private int north;
@@ -59,52 +62,52 @@ public class CaveInitializer {
       this.text  = text;
       this.thing = thing;
     }
-    
+
     public int north() {
       return north;
     }
-    
+
     public int south() {
       return south;
     }
-    
+
     public int east() {
       return east;
     }
-    
+
     public int west() {
       return west;
     }
-    
+
     public String text() {
       return text;
     }
-    
+
     public void setThing(Thing thing) {
       this.thing = thing;
     }
-    
+
     public Thing thing() {
       return thing;
     }
-    
+
     @Override
     public String toString() {
       return new StringBuilder("Room ID:")
-        .append(id)
-        .append(" - north: ")
-        .append(north)
-        .append(", south: ")
-        .append(south)
-        .append(", east: ")
-        .append(east)
-        .append(", west: ")
-        .append(west)
-        .append(" - ")
-        .append(text)
-        .append(" - With the thing: ")
-        .append(thing)
-        .toString();
+      .append(id)
+      .append(" - north: ")
+      .append(north)
+      .append(", south: ")
+      .append(south)
+      .append(", east: ")
+      .append(east)
+      .append(", west: ")
+      .append(west)
+      .append(" - ")
+      .append(text)
+      .append(" - With the thing: ")
+      .append(thing)
+      .toString();
     }
   }
 
@@ -113,26 +116,26 @@ public class CaveInitializer {
   }
 
   /**
-   * Returns a reference to the Starting Room.
-   * @return A reference to the Starting Room
-   */
+  * Returns a reference to the Starting Room.
+  * @return A reference to the Starting Room
+  */
   public Room getFirstRoom() {
-    return cave.get(1);
+    return cave.get(250);
   }
 
   /**
-   * Returns a reference to a Room by its db id.
-   * Will be useful in later versions of the game.
-   * @return A reference to a Room by its db id
-   */
+  * Returns a reference to a Room by its db id.
+  * Will be useful in later versions of the game.
+  * @return A reference to a Room by its db id
+  */
   public Room getRoomById(int id) {
     return cave.get(id);
   }
 
   /**
-   * Reads the rooms from the database and creates a cave
-   * Using Room objects as a graph.
-   */
+  * Reads the rooms from the database and creates a cave
+  * Using Room objects as a graph.
+  */
   public void initAll() {
     Map<Integer, DbRoom> rooms = new TreeMap<>();
     int lastRoom = -1;
@@ -148,16 +151,16 @@ public class CaveInitializer {
         } else {
           line = new StringBuilder(rs.getString("line"));
         }
-        
+
         room = new DbRoom(currentRoom,
-                          rs.getInt("north"),
-                          rs.getInt("south"),
-                          rs.getInt("east"),
-                          rs.getInt("west"),
-                          line.toString(),
-                          rs.getString("thing") == null
-                          ? null
-                          : new Thing(rs.getString("thing")));
+        rs.getInt("north"),
+        rs.getInt("south"),
+        rs.getInt("east"),
+        rs.getInt("west"),
+        line.toString(),
+        rs.getString("thing") == null
+        ? null
+        : new Thing(rs.getString("thing")));
         lastRoom = currentRoom;
         rooms.put(currentRoom, room);
       }
@@ -167,37 +170,37 @@ public class CaveInitializer {
     buildCave(rooms);
     addRules();
   }
-  
+
   /*
-   * Strategy: create a map Integer,Room with the rooms
-   * from the map Integer,DbRoom but without any exits.
-   *
-   * Next, loop through the rooms map again, and check
-   * the exits. All Rooms now exist in the cave map.
-   * So we can set the exits of the Rooms in cave like this:
-   * currentRoom.setDirection(Room.NORTH, cave.get(currentDBRoom.north()));
-   * 
-   * It can be done in several steps of course, but the idea is
-   * that we iterate over all the IDs in the map of DbRoom
-   * references, and use the fact that we have the cave map
-   * which is a map of actual Room references, in parallell.
-   *
-   * The DbRoom keeps its exits as int IDs, which we can use
-   * to get hold of the actual Room with the same ID.
-   * With this information we can actually set the exits
-   * of the actual Room to a reference to the correct
-   * actual Rooms.
-   * 
-   * If the rooms map of DbRoom references look like this:
-{1=Room ID:1 - north: 5, south: 4, east: 3, west: 2 You are standing at the end of a road. Thing: null,
- 2=Room ID:2 - north: 0, south: 5, east: 1, west: 0 - You have walked up a hill. Thing: null,
- 3=Room ID:3 - north: 6, south: 6, east: 6, west: 1 - You are inside a building. Thing: Skeleton Key
- .....}
- 
- * Then we can set the cave's Room with id 1 to have the Room in
- * the cave with id 5 as the North room, and so on.
- * We translate the DbRoom's ID to an actual Room.
-   */
+  * Strategy: create a map Integer,Room with the rooms
+  * from the map Integer,DbRoom but without any exits.
+  *
+  * Next, loop through the rooms map again, and check
+  * the exits. All Rooms now exist in the cave map.
+  * So we can set the exits of the Rooms in cave like this:
+  * currentRoom.setDirection(Room.NORTH, cave.get(currentDBRoom.north()));
+  *
+  * It can be done in several steps of course, but the idea is
+  * that we iterate over all the IDs in the map of DbRoom
+  * references, and use the fact that we have the cave map
+  * which is a map of actual Room references, in parallell.
+  *
+  * The DbRoom keeps its exits as int IDs, which we can use
+  * to get hold of the actual Room with the same ID.
+  * With this information we can actually set the exits
+  * of the actual Room to a reference to the correct
+  * actual Rooms.
+  *
+  * If the rooms map of DbRoom references look like this:
+  {1=Room ID:1 - north: 5, south: 4, east: 3, west: 2 You are standing at the end of a road. Thing: null,
+  2=Room ID:2 - north: 0, south: 5, east: 1, west: 0 - You have walked up a hill. Thing: null,
+  3=Room ID:3 - north: 6, south: 6, east: 6, west: 1 - You are inside a building. Thing: Skeleton Key
+  .....}
+
+  * Then we can set the cave's Room with id 1 to have the Room in
+  * the cave with id 5 as the North room, and so on.
+  * We translate the DbRoom's ID to an actual Room.
+  */
   private void buildCave(Map<Integer, DbRoom> rooms) {
     DbRoom currentDbRoom;
     DbRoom room;
@@ -215,8 +218,8 @@ public class CaveInitializer {
         things.add(currentDbRoom.thing());
       }
       currentRoom = new Room(currentDbRoom.text(),
-                             null, null, null, null,                             
-                             things);
+      null, null, null, null,
+      things);
       cave.put(roomId, currentRoom);
     }
     // The Glass Key shouldn't be there, so let's remove it
@@ -240,80 +243,101 @@ public class CaveInitializer {
       Room westRoom = cave.get(room.west());
       if (westRoom != null) {
         thisRoom.setConnectingRoom(Room.Direction.WEST, westRoom);
-      }    
+      }
     }
   }
 
   private void addRules() {
     RuleBook
-      .addThingRule(Things
-                    .get("Bird"),
-                    ()->
-                    {
-                      if(Player
-                         .getInstance()
-                         .inventory()
-                         .contains(Things.get("Rod"))) {
-                        throw new RuleViolationException("The bird gets scared and you can't take it");
-                      }
-                      if(!Player
-                         .getInstance()
-                         .inventory()
-                         .contains(Things.get("Cage"))) {
-                        throw new RuleViolationException("You cannot take the bird right now");
-                      } else {
-                        return true;
-                      }
-                    });
+    .addThingRule(Things
+    .get("Bird"),
+    ()->
+    {
+      if(Player
+      .getInstance()
+      .inventory()
+      .contains(Things.get("Rod"))) {
+        throw new RuleViolationException("The bird gets scared and you can't take it");
+      }
+      if(!Player
+      .getInstance()
+      .inventory()
+      .contains(Things.get("Cage"))) {
+        throw new RuleViolationException("You cannot take the bird right now");
+      } else {
+        return true;
+      }
+    });
+
     RuleBook
-      .addThingRule(Things
-                    .get("Pirate Chest"),
-                    ()->
-                    {
-                      List<Thing> inventory = Player.getInstance().inventory();
-                      if(!inventory.contains(Things.get("Glass Key")) ||
-                         !inventory.contains(Things.get("Rusty Key")) ||
-                         !inventory.contains(Things.get("Brass Key")) ||
-                         !inventory.contains(Things.get("Skeleton Key")) ) {
-                        throw new RuleViolationException("You cannot pick up and unlock the pirate chest now");
-                      } else {
-                        return true;
-                      }
-                    });
+    .addThingRule(Things
+    .get("Pirate Chest"),
+    ()->
+    {
+      List<Thing> inventory = Player.getInstance().inventory();
+      if(!inventory.contains(Things.get("Glass Key")) ||
+      !inventory.contains(Things.get("Rusty Key")) ||
+      !inventory.contains(Things.get("Brass Key")) ||
+      !inventory.contains(Things.get("Skeleton Key")) ) {
+        Music music = new Music("music.wav");
+        music.play("music.wav");
+        JOptionPane.showMessageDialog(null,"You won!");
+        music.play("win.wav");
+
+        throw new RuleViolationException("You cannot pick up and unlock the pirate chest now");
+      } else {
+
+        Music music = new Music("win.wav");
+        music.play("win.wav");
+        JOptionPane.showMessageDialog(null,"You won!");
+        return true;
+
+      }
+    });
+
+    RuleBook.addRoomRule(getRoomById(34), new RoomRule(getRoomById(34), "Die Motherfucker") {
+      @Override
+      public void apply() {
+          JOptionPane.showMessageDialog(null,"Game Over");
+          System.exit(1);
+      }
+    });
+
+
     RuleBook.addRoomRule(getRoomById(19), new RoomRule(getRoomById(19), "There's a Snake blocking the South Exit") {
-        @Override
-        public void apply() {
-          if(room.things().contains(Things.get("Cage")) &&
-             room.things().contains(Things.get("Bird"))) {
-            this.changeCreatureDescription("There's no Snake here");
-            CaveInitializer.this.getRoomById(19).setConnectingRoom(Room.Direction.SOUTH, getRoomById(29));
-          }
+      @Override
+      public void apply() {
+        if(room.things().contains(Things.get("Cage")) &&
+        room.things().contains(Things.get("Bird"))) {
+          this.changeCreatureDescription("There's no Snake here");
+          CaveInitializer.this.getRoomById(19).setConnectingRoom(Room.Direction.SOUTH, getRoomById(29));
         }
-      });
-    
+      }
+    });
+
     RuleBook.addRoomRule(getRoomById(120), new RoomRule(getRoomById(120), "There's a greedy Dragon here.") {
-        @Override
-        public void apply() {
-          if(room.things().contains(Things.get("Gold")) &&
-             room.things().contains(Things.get("Silver")) &&
-             room.things().contains(Things.get("Jewelry")) &&
-             room.things().contains(Things.get("Diamonds"))) {
-            this.changeCreatureDescription("A Glass Key magically appears. The Dragon left with the valuables.");
-            try {
-              room.removeThing(Things.get("Jewelry"));
-              room.removeThing(Things.get("Gold"));
-              room.removeThing(Things.get("Silver"));
-              room.removeThing(Things.get("Diamonds"));
-              if(!Player.getInstance().inventory().contains(Things.get("Glass Key"))) {
-                room.putThing(Things.get("Glass Key"));
-              }
-            } catch (IllegalArgumentException e) {
-              // The Glass Key is already here for some reason
+      @Override
+      public void apply() {
+        if(room.things().contains(Things.get("Gold")) &&
+        room.things().contains(Things.get("Silver")) &&
+        room.things().contains(Things.get("Jewelry")) &&
+        room.things().contains(Things.get("Diamonds"))) {
+          this.changeCreatureDescription("A Glass Key magically appears. The Dragon left with the valuables.");
+          try {
+            room.removeThing(Things.get("Jewelry"));
+            room.removeThing(Things.get("Gold"));
+            room.removeThing(Things.get("Silver"));
+            room.removeThing(Things.get("Diamonds"));
+            if(!Player.getInstance().inventory().contains(Things.get("Glass Key"))) {
+              room.putThing(Things.get("Glass Key"));
             }
+          } catch (IllegalArgumentException e) {
+            // The Glass Key is already here for some reason
           }
         }
-      });
-    
+      }
+    });
+
   }
-  
+
 }

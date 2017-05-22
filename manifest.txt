@@ -1,0 +1,2 @@
+Main-Class: se.itu.game.main.MainGui
+Class-Path: sqlite-jdbc-3.16.1.jar

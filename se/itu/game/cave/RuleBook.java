@@ -26,6 +26,7 @@ public class RuleBook {
   * @param thing The Thing for which a rule is added
   * @param rule The ThingRule for the Thing
   */
+
   public static void addThingRule(Thing thing, ThingRule rule) {
     rules.put(thing, rule);
   }
