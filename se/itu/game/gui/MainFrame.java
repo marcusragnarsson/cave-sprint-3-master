@@ -1,7 +1,9 @@
 package se.itu.game.gui;
 
-import static se.itu.game.cave.Room.Direction;
 
+
+import static se.itu.game.cave.Room.Direction;
+import se.itu.game.cave.Music;
 import se.itu.game.cave.IllegalMoveException;
 import se.itu.game.cave.Player;
 import se.itu.game.cave.Room;
@@ -21,6 +23,7 @@ import javax.swing.*;
 
 public class MainFrame {
   private JFrame mainFrame;
+  private JButton cheatButton;//DEMObutton
   private JButton northButton;
   private JButton southButton;
   private JButton eastButton;
@@ -81,6 +84,7 @@ public class MainFrame {
     player = Player.getInstance();
     mainFrame    = new JFrame("Cave game");
     mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    cheatButton = new JButton("CHEAT");
     northButton = new JButton("NORTH");
     southButton = new JButton("SOUTH");
     eastButton  = new JButton("EAST");
@@ -116,29 +120,6 @@ public class MainFrame {
     roomThings.setPrototypeCellValue(new Thing("Pirate ChestXXXXXXXX"));
   }
 
-  private void addFakeRules() {
-    RuleBook
-    .addThingRule(Things
-    .get("Bird"),
-    ()->
-    {
-      if(player
-      .getInstance()
-      .inventory()
-      .contains(Things.get("Rod"))) {
-        throw new RuleViolationException("The bird gets scared and you can't take it");
-      }
-      if(!player
-      .getInstance()
-      .inventory()
-      .contains(Things.get("Cage"))) {
-        throw new RuleViolationException("You cannot take the bird right now");
-      } else {
-        return true;
-      }
-    });
-  }
-
   private void updateButtons() {
 
     Room currentRoom = player.currentRoom();
@@ -163,7 +144,7 @@ public class MainFrame {
   }
 
   private void layoutComponents() {
-    navigationPanel.setLayout(new GridLayout(3,3));
+    navigationPanel.setLayout(new GridLayout(4,3));
     navigationPanel.add(new JPanel());
     navigationPanel.add(northButton);
     navigationPanel.add(new JPanel());
@@ -173,6 +154,10 @@ public class MainFrame {
     navigationPanel.add(new JPanel());
     navigationPanel.add(southButton);
     navigationPanel.add(new JPanel());
+    navigationPanel.add(cheatButton);
+
+
+
     top.add(navigationPanel);
     JScrollPane inventoryScroll = new JScrollPane(inventory);
     JScrollPane roomThingsScroll = new JScrollPane(roomThings);
@@ -215,6 +200,8 @@ public class MainFrame {
     roomThings.addMouseListener(roomThingsListener);
   }
 
+
+
   /* Run this method from main() when you want
   * to setup and show this window.
   */
@@ -224,6 +211,39 @@ public class MainFrame {
     addListeners();
     mainFrame.pack();
     mainFrame.setVisible(true);
+    fakeClicks();
+
+
+  }
+  private void fakeClicks() {
+    try {
+
+      eastButton.doClick(1000);
+      player.takeThing(Things.get("Skeleton Key"));
+      westButton.doClick(1000);
+      //player.dropThing(Things.get("Skeleton Key"));
+      try {
+        Thread.currentThread().sleep(500);
+      } catch (InterruptedException epa) {}
+      for(int i=0; i<5; i++) {
+        southButton.doClick(500);
+      }
+      mainFrame.paintAll(mainFrame.getGraphics());
+      westButton.doClick(1000);
+      player.takeThing(Things.get("Cage"));
+      westButton.doClick(1000);
+      westButton.doClick(1000);
+      player.takeThing(Things.get("Rod"));
+      westButton.doClick(1000);
+      westButton.doClick(1000);
+      try {
+        player.takeThing(Things.get("Bird"));
+      }catch(RuleViolationException e2) {
+        messages.setText("Can't take turd");
+      }
+      player.dropThing(Things.get("Rod"));
+      player.takeThing(Things.get("Bird"));
+    } catch(RuleViolationException e) {}
   }
 
   private class RoomThingsListener extends MouseAdapter {

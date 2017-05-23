@@ -120,7 +120,7 @@ public class CaveInitializer {
   * @return A reference to the Starting Room
   */
   public Room getFirstRoom() {
-    return cave.get(250);
+    return cave.get(1);
   }
 
   /**
@@ -279,16 +279,12 @@ public class CaveInitializer {
       !inventory.contains(Things.get("Rusty Key")) ||
       !inventory.contains(Things.get("Brass Key")) ||
       !inventory.contains(Things.get("Skeleton Key")) ) {
-        Music music = new Music("music.wav");
-        music.play("music.wav");
-        JOptionPane.showMessageDialog(null,"You won!");
-        music.play("win.wav");
 
         throw new RuleViolationException("You cannot pick up and unlock the pirate chest now");
       } else {
 
-        Music music = new Music("win.wav");
-        music.play("win.wav");
+        Music player = new Music();
+        Music.play("win.wav");
         JOptionPane.showMessageDialog(null,"You won!");
         return true;
 

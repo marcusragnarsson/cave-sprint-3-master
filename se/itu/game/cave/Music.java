@@ -1,78 +1,73 @@
 package se.itu.game.cave;
-import java.io.*;
-import javax.sound.sampled.*;
-public class Music implements Runnable
-{
-  private Thread t = new Thread();
-  String fileLocation;
-  public Music(String fileLocation)
-  {
-    this.fileLocation = fileLocation;
 
-  }
-  /**
-  * Plays the song from the specified MusicObject
-  *
-  */
+import java.io.File;
+import java.io.IOException;
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.UnsupportedAudioFileException;
+
+/**
+ * This is an example program that demonstrates how to play back an audio file
+ * using the SourceDataLine in Java Sound API.
+ * @author www.codejava.net
+ *
+ */
+public class Music {
+
+    // size of the byte buffer used to read/write the audio stream
+    private static final int BUFFER_SIZE = 4096;
+
+    /**
+     * Play a given audio file.
+     * @param audioFilePath Path of the audio file.
+     */
+  public static void play(String audioFilePath) {
+        File audioFile = new File(audioFilePath);
+        try {
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+
+            AudioFormat format = audioStream.getFormat();
+
+            DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
+
+            SourceDataLine audioLine = (SourceDataLine) AudioSystem.getLine(info);
+
+            audioLine.open(format);
+
+            audioLine.start();
+
+            System.out.println("Playback started.");
+
+            byte[] bytesBuffer = new byte[BUFFER_SIZE];
+            int bytesRead = -1;
+
+            while ((bytesRead = audioStream.read(bytesBuffer)) != -1) {
+                audioLine.write(bytesBuffer, 0, bytesRead);
+            }
+
+            audioLine.drain();
+            audioLine.close();
+            audioStream.close();
+
+            System.out.println("Playback completed.");
+
+        } catch (UnsupportedAudioFileException ex) {
+            System.out.println("The specified audio file is not supported.");
+            ex.printStackTrace();
+        } catch (LineUnavailableException ex) {
+            System.out.println("Audio line for playing back is unavailable.");
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Error playing the audio file.");
+            ex.printStackTrace();
+        }
+    }
 
 
-  public  void play(String fileName){
-                t.start();
-                fileLocation = fileName;
 
-
-  }
-    public void run ()
-    {
-      playSound(fileLocation);
-    }
-  private void playSound(String fileName)
-  {
-    File    soundFile = new File(fileName);
-    AudioInputStream        audioInputStream = null;
-    try
-    {
-      audioInputStream = AudioSystem.getAudioInputStream(soundFile);
-    }
-    catch (Exception e)
-    {
-      e.printStackTrace();
-    }
-    AudioFormat     audioFormat = audioInputStream.getFormat();
-    SourceDataLine  line = null;
-    DataLine.Info   info = new DataLine.Info(SourceDataLine.class,audioFormat);
-    try
-    {
-      line = (SourceDataLine) AudioSystem.getLine(info);
-      line.open(audioFormat);
-    }
-    catch (LineUnavailableException e)
-    {
-      e.printStackTrace();
-    }
-    catch (Exception e)
-    {
-      e.printStackTrace();
-    }
-    line.start();
-    int     nBytesRead = 0;
-    byte[]  abData = new byte[128000];
-    while (nBytesRead != -1)
-    {
-      try
-      {
-        nBytesRead = audioInputStream.read(abData, 0, abData.length);
-      }
-      catch (IOException e)
-      {
-        e.printStackTrace();
-      }
-      if (nBytesRead >= 0)
-      {
-        int     nBytesWritten = line.write(abData, 0, nBytesRead);
-      }
-    }
-    line.drain();
-    line.close();
-  }
 }
