@@ -46,7 +46,7 @@ public class MainFrame {
   private JLabel inventoryLabel;
   private JLabel thingsLabel;
   private Map<Room.Direction, JButton> buttonMap;
-
+  private boolean pause = false;
   private boolean debug;
 
   private class ThingRenderer<Thing> implements ListCellRenderer<Thing> {
@@ -89,6 +89,7 @@ public class MainFrame {
     southButton = new JButton("SOUTH");
     eastButton  = new JButton("EAST");
     westButton  = new JButton("WEST");
+    westButton.AbstractButton.setIcon(icon);
     /* A map with directions as keys and the nav buttons as values
     * used for looping through the buttons and enable/disable them
     */
@@ -194,6 +195,14 @@ public class MainFrame {
         }
       });
     }
+    cheatButton.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e){
+        if (pause == true){
+          pause = false;
+        }
+         pause = true;
+      }
+    });
     RoomThingsListener roomThingsListener = new RoomThingsListener();
     InventoryListener inventoryListener   = new InventoryListener();
     inventory.addMouseListener(inventoryListener);
@@ -212,38 +221,135 @@ public class MainFrame {
     mainFrame.pack();
     mainFrame.setVisible(true);
     fakeClicks();
+  }
 
+  public void pauseCheck(){
+    while(pause){
+      try {
+        Thread.currentThread().wait();
+      } catch (InterruptedException epa) {}
+
+      Thread.currentThread().notify();
+    }
+  }
+  private void clickWest(int y){
+    pauseCheck();
+    for(int i=0;i<y; i++){
+    westButton.doClick(1000);
+    sleep(1000);
+    }
+  }
+  private void clickEast(int y){
+    pauseCheck();
+    for(int i=0;i<y; i++){
+    eastButton.doClick(1000);
+    sleep(1000);
+
+    }
+  }
+
+  private void clickSouth(int y){
+    pauseCheck();
+
+    for(int i=0;i<y; i++){
+    southButton.doClick(1000);
+    sleep(1000);
+
+    }
+  }
+  private void clickNorth(int y){
+    pauseCheck();
+
+    for(int i=0;i<y; i++){
+    northButton.doClick(1000);
+      sleep(1000);
+    }
+  }
+  private void rePaint(){
+    mainFrame.paintAll(mainFrame.getGraphics());
+  }
+
+  private void sleep(int i){
+    try {
+      Thread.currentThread().sleep(i);
+    } catch (InterruptedException epa) {}
+  }
+  private void pickUp(String thing){
+    try{
+    player.takeThing(Things.get(thing));
+  } catch(RuleViolationException e) {}
+    updateGui();
+    sleep(1000);
+  }
+  private void drop(String thing){
+    player.dropThing(Things.get(thing));
+    updateGui();
+    sleep(1000);
 
   }
-  private void fakeClicks() {
-    try {
 
-      eastButton.doClick(1000);
-      player.takeThing(Things.get("Skeleton Key"));
-      westButton.doClick(1000);
-      //player.dropThing(Things.get("Skeleton Key"));
-      try {
-        Thread.currentThread().sleep(500);
-      } catch (InterruptedException epa) {}
-      for(int i=0; i<5; i++) {
-        southButton.doClick(500);
-      }
-      mainFrame.paintAll(mainFrame.getGraphics());
-      westButton.doClick(1000);
-      player.takeThing(Things.get("Cage"));
-      westButton.doClick(1000);
-      westButton.doClick(1000);
-      player.takeThing(Things.get("Rod"));
-      westButton.doClick(1000);
-      westButton.doClick(1000);
+  private void fakeClicks() {
+      clickEast(1);
+      pickUp("Skeleton Key");
+      clickWest(1);
+      clickSouth(4);
+      clickWest(1);
+      pickUp("Cage");
+      clickWest(1);
+      pickUp("Rod");
+      clickWest(2);
       try {
         player.takeThing(Things.get("Bird"));
       }catch(RuleViolationException e2) {
         messages.setText("Can't take turd");
       }
-      player.dropThing(Things.get("Rod"));
-      player.takeThing(Things.get("Bird"));
-    } catch(RuleViolationException e) {}
+      sleep(2000);
+      updateGui();
+      messages.setText("");
+      clickEast(1);
+      drop("Rod");
+      clickWest(1);
+    pickUp("Bird");
+      clickWest(1);
+      clickSouth(2);
+      drop("Bird");
+      drop("Cage");
+      clickSouth(1);
+      pickUp("Jewelry");
+      clickNorth(2);
+      clickEast(1);
+      pickUp("Gold");
+      clickWest(1);
+      pickUp("Silver");
+      clickEast(1);
+      clickSouth(1);
+      clickNorth(1);
+      clickWest(2);
+      pickUp("Diamonds");
+      clickSouth(1);
+      clickEast(1);
+      clickWest(1);
+      drop("Gold");
+      drop("Silver");
+      drop("Jewelry");
+      drop("Diamonds");
+      pickUp("Glass Key");
+      clickEast(2);
+      clickNorth(1);
+      clickWest(3);
+      clickSouth(2);
+      clickWest(1);
+      pickUp("Rusty Key");
+      clickEast(2);
+      clickSouth(3);
+      clickNorth(1);
+      clickEast(1);
+      clickNorth(1);
+      pickUp("Brass Key");
+      clickEast(1);
+      clickNorth(1);
+      pickUp("Pirate Chest");
+
   }
 
   private class RoomThingsListener extends MouseAdapter {
